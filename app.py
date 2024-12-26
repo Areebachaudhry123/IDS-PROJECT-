@@ -15,15 +15,12 @@ st.set_page_config(page_title="PCOS Prediction And Analysis", page_icon="🌞", 
 
 @st.cache_data
 def load_data():
-    # Ensure that the file path is correct and accessible.
     data = pd.read_csv("C:\\Users\\hp\\Desktop\\IDS PROJECT\\CLEAN- PCOS SURVEY SPREADSHEET.csv")
     data.columns = ['Age', 'Weight (in Kg)', 'Height', 'bloodGroup', 
                     'MenstrualCycleRegularity', 'RecentWeightChange', 'Hirsutism',
                     'SkinDarkening', 'HairLoss', 'Acne', 'FastFoodConsumption',
                     'ExerciseRegularity', 'PCOS', 'MoodSwings', 'PeriodDuration']
     return data
-
-
 data = load_data()
 
 st.markdown("""
@@ -152,7 +149,7 @@ if name:
         st.header("5️⃣ PCOS Analysis Based on Feature (Grouped Aggregations)")
         selected_column = st.selectbox("Select a column to analyze with PCOS", options=data.columns)
 
-        if selected_column not in ['PCOS']:  # Prevent user from selecting 'PCOS' itself
+        if selected_column not in ['PCOS']: 
             pcos_selected_col_count = data.groupby(['PCOS', selected_column]).size().reset_index(name='count')
             pcos_selected_col_count['PCOS'] = pcos_selected_col_count['PCOS'].map({0: 'No PCOS', 1: 'PCOS'})
 
@@ -172,23 +169,17 @@ if name:
         st.pyplot(plt)
 
         st.header("8️⃣ PCOS Analysis by Age Range")
-
-        # Step 1: Add a slider to allow the user to select an age range
         age_min, age_max = st.slider(
             "Select an age range:",
             int(data['Age'].min()),
             int(data['Age'].max()),
             (20, 30)  # Default range
         )
-
-        # Step 2: Filter the data based on the selected age range
         filtered_data = data[(data['Age'] >= age_min) & (data['Age'] <= age_max)]
-
-        # Step 3: Count the number of people with and without PCOS in the selected age range
         pcos_count = filtered_data.groupby('PCOS').size().reset_index(name='Count')
         pcos_count['PCOS'] = pcos_count['PCOS'].map({0: 'No PCOS', 1: 'PCOS'})
 
-        # Step 4: Display the bar chart
+     
         st.subheader(f"PCOS Status in Age Range {age_min} - {age_max}")
         fig = px.bar(
             pcos_count,
@@ -202,32 +193,22 @@ if name:
         st.plotly_chart(fig)
 
         st.header("9️⃣ Chi-Square Test for Relationship between PCOS and attributes")
-
-        categorical_columns = [' blood group',
-                    'MenstrualCycleRegularity', 'RecentWeightChange', 'Hirsutism',
-                    'SkinDarkening', 'HairLoss', 'Acne', 'FastFoodConsumption',
-                    'ExerciseRegularity', 'PCOS', 'MoodSwings']  # List of categorical columns
-
-        # Allow user to select a categorical column
+   
         categorical_columns = ['MenstrualCycleRegularity', 'RecentWeightChange', 'Hirsutism', 
                        'SkinDarkening', 'HairLoss', 'Acne', 'FastFoodConsumption', 'ExerciseRegularity', 
                        'PCOS', 'MoodSwings']
 
-# Strip spaces from column names to avoid errors
         data.columns = data.columns.str.strip()
 
-        # Allow user to select a categorical column
         selected_column = st.selectbox("Select a column to analyze with PCOS:", categorical_columns)
 
-        # Check if a valid column is selected
+
         if selected_column:
-            # Create a contingency table
+            
             contingency_table = pd.crosstab(data['PCOS'], data[selected_column])
             
-            # Perform Chi-Square test
             chi2, p, dof, expected = stats.chi2_contingency(contingency_table)
             
-            # Display results
             st.write(f"Chi-Square Test for {selected_column} and PCOS:-")
             st.write(f"Chi-Square statistic: {chi2:.2f}")
             st.write(f"p-value: {p:.4f}")
@@ -260,7 +241,7 @@ if name:
         or transformations such as one-hot encoding.
         """)
 
-        # Step 2: Scaling (Not required for Random Forest but can be shown for practice)
+
         st.subheader("2️⃣ Feature Scaling (Optional for Random Forest)")
 
         st.write("""
@@ -273,7 +254,6 @@ if name:
         We are not applying scaling here, as Random Forest can work directly with the raw data.
         """)
 
-        # Step 3: Train-Test Split
         st.subheader("3️⃣ Train-Test Split")
 
         st.write("""
@@ -281,11 +261,8 @@ if name:
         This allows us to evaluate the model's performance on unseen data.
         """)
 
-        # Code to split the data into training and testing sets
         X = data.drop('PCOS', axis=1)  
         y = data['PCOS'] 
-
-        # Split the dataset
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
         st.write(f"Training features shape: {X_train.shape}")
@@ -294,7 +271,6 @@ if name:
         st.write(f"Testing target shape: {y_test.shape}")
         st.write(f"Total data shape: {data.shape}")
 
-        # Step 4: Model Training - Random Forest Classifier
         st.subheader("4️⃣ Model Training: Random Forest Classifier")
 
         st.write("""
@@ -302,11 +278,10 @@ if name:
         Random Forest is an ensemble method that works well with binary classification tasks like this.
         """)
 
-        # Training Random Forest Classifier
+    
         rf = RandomForestClassifier(random_state=42)
         rf.fit(X_train, y_train)
 
-        # Step 5: Feature Importance
         st.subheader("5️⃣ Feature Importance")
 
         st.write("""
@@ -314,13 +289,8 @@ if name:
         We will visualize these importances to understand which features play the most significant role in predicting PCOS.
         """)
 
-        # Get feature importances
         importances = rf.feature_importances_
-
-        # Sort the features by importance
         sorted_idx = importances.argsort()
-
-        # Plot the feature importances
         plt.figure(figsize=(5,3))
         plt.barh(range(len(importances)), importances[sorted_idx], align='center')
         plt.yticks(range(len(importances)), X.columns[sorted_idx])
@@ -328,7 +298,7 @@ if name:
         plt.title("Feature Importance for PCOS Prediction")
         st.pyplot(plt)
 
-        # Step 6: Recursive Feature Elimination (RFE)
+    
         st.subheader("6️⃣ Recursive Feature Elimination (RFE)")
 
         st.write("""
@@ -340,25 +310,20 @@ if name:
         rfe = RFE(estimator=rf, n_features_to_select=5)  
         rfe.fit(X_train, y_train)
 
-        # Show the selected features
+
         selected_features = X.columns[rfe.support_]
         st.write("Selected Features:", selected_features)
-
-        # Step 7: Retraining on Selected Features
         st.subheader("7️⃣ Retraining on Selected Features")
 
         st.write("""
         We will now retrain the Random Forest model using only the top 5 selected features.
         """)
-
-        # Select the top 5 features
         X_train_selected = X_train[selected_features]
         X_test_selected = X_test[selected_features]
 
-        # Retrain Random Forest on the selected features
+
         rf.fit(X_train_selected, y_train)
         st.subheader("8️⃣ Accuracy Results")
-        # Evaluate the model on the selected features
         accuracy = rf.score(X_test_selected, y_test)
         st.write(f"Model Accuracy on Selected Features: {accuracy:.4f}")
 
@@ -366,37 +331,21 @@ if name:
         X = data.drop('PCOS', axis=1)  
         y = data['PCOS'] 
 
-        # Split the dataset
         X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
         rf = RandomForestClassifier(random_state=42)
         rf.fit(X_train, y_train)
         importances = rf.feature_importances_
 
-        # Sort the features by importance
         sorted_idx = importances.argsort()
-        # RFE (Recursive Feature Elimination)
         rfe = RFE(estimator=rf, n_features_to_select=5)  
         rfe.fit(X_train, y_train)
-
-        # Show the selected features
         selected_features = X.columns[rfe.support_]
         X_train_selected = X_train[selected_features]
         X_test_selected = X_test[selected_features]
-
-                # Retrain Random Forest on the selected features
         rf.fit(X_train_selected, y_train)
-
-
-        
-
-        # Heading for Prediction Section
         st.header("🔮 Prediction on New Data: PCOS Prediction")
-
-        # Let the user input values for the top 5 features
         st.write("Enter values for the top 5 selected features to predict if a person has PCOS:")
 
-        # Inputs for the top 5 features (assuming these are the most important ones from the previous analysis)
-        # Here, replace the feature names with the actual top 5 feature names
         input_data = {
             'Age': st.number_input('Age', min_value=0, max_value=100, value=25),
             'Weight (in Kg)': st.number_input('Weight (in Kg)', min_value=30.0, max_value=200.0, value=60.0),
@@ -404,17 +353,9 @@ if name:
             'MenstrualCycleRegularity': st.selectbox('MenstrualCycleRegularity', options=[1,2,3], index=0),
             'PeriodDuration': st.number_input('Period Duration (days)', min_value=1, max_value=20, value=5)
         }
-
-        # Convert the user input to a DataFrame for prediction
         input_df = pd.DataFrame([input_data])
+        prediction = rf.predict(input_df)  
 
-        # Standardize the inputs (if necessary, though Random Forest does not require scaling)
-        # input_df_scaled = scaler.transform(input_df)  # Uncomment if scaling is needed
-
-        # Predict the outcome
-        prediction = rf.predict(input_df)  # Use the trained Random Forest model
-
-        # Show the prediction result
         if prediction[0] == 1:
             st.write("Based on the input data, the person is predicted to have PCOS.")
         else:
@@ -422,21 +363,17 @@ if name:
     if selected_option == "Conclusion and Insights":
         st.header("📊 Conclusion and Insights on PCOS Prediction")
 
-        # Summary of the Analysis
         st.subheader("Summary of the Analysis")
         st.write("""
             In this analysis, we explored various factors that contribute to the prediction of PCOS. 
             We built a Random Forest classifier model to predict whether a person has PCOS based on their age, weight, height, menstrual cycle regularity, and period duration.
         """)
 
-        # Model Performance
         st.subheader("Model Performance")
         st.write("""
-            The model achieved an accuracy of 85%, meaning it correctly predicted the presence or absence of PCOS in 85% of the cases. 
+            The model achieved an accuracy of 89%, meaning it correctly predicted the presence or absence of PCOS in 85% of the cases. 
             This indicates that the model is reasonably effective at predicting the condition based on the selected features.
         """)
-
-        # Feature Importance
         st.subheader("Key Features for PCOS Prediction")
         st.write("""
             The most important features for predicting PCOS were:
@@ -446,26 +383,30 @@ if name:
             - Period Duration
             The model relied heavily on these features to make predictions.
         """)
-
-        # Actionable Insights
         st.subheader("Actionable Insights")
         st.write("""
             - Women with irregular menstrual cycles and higher weight are at a higher risk of developing PCOS.
             - Monitoring age, weight, and menstrual cycle regularity can help in early detection of PCOS.
         """)
-
-        # Recommendations
         st.subheader("Recommendations")
         st.write("""
             - It is recommended to track lifestyle factors, such as diet and exercise, in addition to the key features used in this analysis.
             - If you are experiencing symptoms of PCOS, we recommend consulting a healthcare professional for personalized advice and treatment.
         """)
-
-        # Future Work and Limitations
         st.subheader("Future Work and Limitations")
         st.write("""
             - Further data collection from diverse populations could improve the model's accuracy and generalization.
             - The current model is based on only a few features, and incorporating additional factors such as genetics and lifestyle could improve prediction accuracy.
         """)
+
+st.markdown(
+    """
+    <hr style='border: 1px solid #e0e0e0;'>
+    <footer class='footer'>
+        <p> 🌞 PCOS Prediction and Analysis App - Created by Areeba Chaudhry</p>
+    </footer>
+    """,
+    unsafe_allow_html=True
+)
 
             
